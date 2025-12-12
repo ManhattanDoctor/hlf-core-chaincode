@@ -118,7 +118,7 @@ export class EntityRelation extends DestroyableContainer {
         if (this.destroyed) {
             return;
         }
-        this.destroy();
+        super.destroy();
         this.stub = null;
         this.childPrefix = null;
         this.parentPrefix = null;

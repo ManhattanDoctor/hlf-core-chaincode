@@ -58,7 +58,7 @@ export class EntityRelationChild<U extends IUIDable = any, V extends EntityManag
         if (this.destroyed) {
             return;
         }
-        this.destroy();
+        super.destroy();
         this.manager = null;
     }
 }

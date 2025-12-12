@@ -88,7 +88,7 @@ export abstract class EntityManager<U extends IUIDable> extends DatabaseManager 
     }
 
     public async removeMany(items: Array<UID>): Promise<void> {
-        Promise.all(items.map(item => this.remove(item)));
+        await Promise.all(items.map(item => this.remove(item)));
     }
 
     // --------------------------------------------------------------------------
