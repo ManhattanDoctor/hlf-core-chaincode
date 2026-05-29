@@ -33,6 +33,20 @@ export class DatabaseManager extends LoggerWrapper {
         return (await DatabaseManager.getKV(stub, start, finish)).map(item => item.value);
     }
 
+    /**
+     * Cascade delete for index → entity tables.
+     *
+     * Reads all KV pairs in `[start, finish]`, then removes BOTH:
+     *   1. the index keys themselves (`item.key`)
+     *   2. the referenced entities (`item.value` — treated as the UID of another state record)
+     *
+     * Use ONLY for tables where value is guaranteed to be a UID of another state record
+     * (e.g. parent→child or child→parent index records created by {@link EntityRelation}).
+     *
+     * Do NOT use for ranges containing entity records themselves (where value is a serialized JSON):
+     * the second pass will call `removeState(serializedJson)` and may accidentally delete an
+     * unrelated state key whose name happens to match the JSON string.
+     */
     public static async removeKV(stub: IStub, start: string, finish?: string): Promise<void> {
         let kv = await DatabaseManager.getKV(stub, start, finish);
         await Promise.all(kv.map(item => stub.removeState(item.key)));
