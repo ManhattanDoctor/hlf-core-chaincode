@@ -30,8 +30,8 @@ export class EntityRelationChild<U extends IUIDable = any, V extends EntityManag
     //
     // --------------------------------------------------------------------------
 
-    public async parentRemove(parent: UID): Promise<Array<UID>> {
-        let items = await super.parentRemove(parent);
+    public async parentRemove(...parent: Array<UID>): Promise<Array<UID>> {
+        let items = await super.parentRemove(...parent);
         for(let item of items) {
             await this.manager.remove(item);
         }
@@ -44,8 +44,8 @@ export class EntityRelationChild<U extends IUIDable = any, V extends EntityManag
     //
     // --------------------------------------------------------------------------
 
-    public async childList(parent: UID, data: IPaginableBookmark<U>): Promise<IPaginationBookmark<U>> {
-        return this.manager.findPaginated(data, this.childListOptions(parent));
+    public async childList(data: IPaginableBookmark<U>, ...parent: Array<UID>): Promise<IPaginationBookmark<U>> {
+        return this.manager.findPaginated(data, this.childListOptions(...parent));
     }
 
     // --------------------------------------------------------------------------

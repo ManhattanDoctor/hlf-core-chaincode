@@ -30,8 +30,10 @@ npm install @hlf-core/chaincode
 Библиотека требует следующие пакеты:
 
 ```bash
-npm install @ts-core/common fabric-shim reflect-metadata
+npm install @hlf-core/common @ts-core/common fabric-shim reflect-metadata
 ```
+
+`@hlf-core/common` предоставляет `StateKey` — сборку ключей состояния, на которой построены связи между сущностями.
 
 ## Быстрый старт
 
@@ -343,6 +345,43 @@ await relation.childRemove('comment123');
 const childIds = await relation.parentRemove('post456');
 ```
 
+#### Как хранятся связи
+
+На каждую связь пишутся два ключа — прямой и обратный:
+
+```
+→link:post~comment:post456~comment123    → comment123
+→link:comment~post:comment123~post456    → post456
+```
+
+Прямой ключ обслуживает выборку детей по родителю: диапазонный запрос по префиксу `→link:post~comment:post456~` возвращает всех детей. Обратный нужен, чтобы снять связи, зная только ребёнка — `childRemove` не требует знать родителя.
+
+Ключи собирает `StateKey` из `@hlf-core/common`, поэтому части ключа проверяются, а префикс поиска всегда заканчивается разделителем — родитель `post4` не захватит детей родителя `post45`.
+
+#### Составной родитель
+
+Родитель может состоять из нескольких частей — тогда поиск возможен по любой левой части. Это удобно, когда связь адресуется парой значений:
+
+```typescript
+// связь ордера со счётом: монета + владелец
+await relation.childAdd(otcUid, coinUid, ownerUid);
+
+// ключ: →link:account~otc:<coinUid>~<ownerUid>~<otcUid>
+
+// все ордера по монете
+relation.childListOptions(coinUid);
+
+// ордера конкретного владельца по этой монете
+relation.childListOptions(coinUid, ownerUid);
+```
+
+Части передаются отдельными аргументами, а не склеенной строкой: разделитель внутри значения сдвинул бы границы частей, поэтому такая строка отклоняется с `StateKeySegmentInvalidError`.
+
+```typescript
+await relation.childAdd(otcUid, `${coinUid}~${ownerUid}`);   // ошибка
+await relation.childAdd(otcUid, coinUid, ownerUid);          // верно
+```
+
 ### EntityRelationChild<T, M>
 
 Расширение `EntityRelation` с автоматическим управлением дочерними сущностями.
@@ -357,9 +396,7 @@ const commentRelation = new EntityRelationChild(
 );
 
 // Получение всех комментариев поста с пагинацией
-const comments = await commentRelation.childList('post456', {
-    pageSize: 10
-});
+const comments = await commentRelation.childList({ pageSize: 10 }, 'post456');
 
 // Удаление поста и всех его комментариев
 const deletedCommentIds = await commentRelation.parentRemove('post456');

@@ -1,4 +1,5 @@
 import { getUid, UID, DestroyableContainer } from "@ts-core/common";
+import { StateKey } from "@hlf-core/common";
 import { DatabaseManager } from "../DatabaseManager";
 import { IEntityFindOptions } from "./EntityManager";
 import { IStub } from "../../stub";
@@ -13,8 +14,8 @@ export class EntityRelation extends DestroyableContainer {
     // --------------------------------------------------------------------------
 
     protected stub: IStub;
-    protected childPrefix: string;
-    protected parentPrefix: string;
+    protected childKey: StateKey;
+    protected parentKey: StateKey;
 
     // --------------------------------------------------------------------------
     //
@@ -25,8 +26,8 @@ export class EntityRelation extends DestroyableContainer {
     constructor(stub: IStub, parentPrefix: string, childPrefix: string) {
         super();
         this.stub = stub;
-        this.childPrefix = childPrefix;
-        this.parentPrefix = parentPrefix;
+        this.childKey = new StateKey(`→link:${childPrefix}~${parentPrefix}`);
+        this.parentKey = new StateKey(`→link:${parentPrefix}~${childPrefix}`);
     }
 
     // --------------------------------------------------------------------------
@@ -35,24 +36,18 @@ export class EntityRelation extends DestroyableContainer {
     //
     // --------------------------------------------------------------------------
 
-    protected getChildKey(child: UID, parent?: UID): string {
-        let item = `→link:${this.childPrefix}~${this.parentPrefix}:${getUid(child)}~`;
-        return !_.isNil(parent) ? `${item}${getUid(parent)}` : item;
+    protected getParentValue(parent: Array<UID>): string {
+        return parent.map(item => getUid(item)).join(StateKey.SEGMENT);
     }
 
-    protected getParentKey(parent: UID, child?: UID): string {
-        let value = `→link:${this.parentPrefix}~${this.childPrefix}:${getUid(parent)}~`;
-        return !_.isNil(child) ? `${value}${getUid(child)}` : value;
+    protected async linkAdd(child: UID, parent: Array<UID>): Promise<void> {
+        await this.stub.putStateRaw(this.childKey.key(child, ...parent), this.getParentValue(parent));
+        await this.stub.putStateRaw(this.parentKey.key(...parent, child), getUid(child));
     }
 
-    protected async linkAdd(child: UID, parent: UID): Promise<void> {
-        await this.stub.putStateRaw(this.getChildKey(child, parent), getUid(parent));
-        await this.stub.putStateRaw(this.getParentKey(parent, child), getUid(child));
-    }
-
-    protected async linkRemove(child: UID, parent: UID): Promise<void> {
-        await this.stub.removeState(this.getChildKey(child, parent));
-        await this.stub.removeState(this.getParentKey(parent, child));
+    protected async linkRemove(child: UID, parent: Array<UID>): Promise<void> {
+        await this.stub.removeState(this.childKey.key(child, ...parent));
+        await this.stub.removeState(this.parentKey.key(...parent, child));
     }
 
     // --------------------------------------------------------------------------
@@ -61,18 +56,18 @@ export class EntityRelation extends DestroyableContainer {
     //
     // --------------------------------------------------------------------------
 
-    public async childAdd(child: UID, parent: UID): Promise<void> {
+    public async childAdd(child: UID, ...parent: Array<UID>): Promise<void> {
         return this.linkAdd(child, parent);
     }
 
-    public childListOptions<T>(parent: UID): IEntityFindOptions<T> {
-        return { prefix: this.getParentKey(parent), transform: item => this.stub.getState(item) };
+    public childListOptions<T>(...parent: Array<UID>): IEntityFindOptions<T> {
+        return { prefix: this.parentKey.prefix(...parent), transform: item => this.stub.getState(item) };
     }
 
     public async childRemove(child: UID): Promise<void> {
-        let kv = await DatabaseManager.getKV(this.stub, this.getChildKey(child));
-        for (let { value } of kv) {
-            await this.linkRemove(child, value);
+        let kv = await DatabaseManager.getKV(this.stub, this.childKey.prefix(child));
+        for (let { key } of kv) {
+            await this.linkRemove(child, _.tail(this.childKey.decompose(key)));
         }
     }
 
@@ -82,15 +77,15 @@ export class EntityRelation extends DestroyableContainer {
     //
     // --------------------------------------------------------------------------
 
-    public async childLinkAdd(child: UID, parent: UID): Promise<void> {
+    public async childLinkAdd(child: UID, ...parent: Array<UID>): Promise<void> {
         return this.linkAdd(child, parent);
     }
 
-    public async childLinkHas(child: UID, parent: UID): Promise<boolean> {
-        return this.stub.hasState(this.getChildKey(child, parent));
+    public async childLinkHas(child: UID, ...parent: Array<UID>): Promise<boolean> {
+        return this.stub.hasState(this.childKey.key(child, ...parent));
     }
 
-    public async childLinkRemove(child: UID, parent: UID): Promise<void> {
+    public async childLinkRemove(child: UID, ...parent: Array<UID>): Promise<void> {
         return this.linkRemove(child, parent);
     }
 
@@ -100,8 +95,8 @@ export class EntityRelation extends DestroyableContainer {
     //
     // --------------------------------------------------------------------------
 
-    public async parentRemove(parent: UID): Promise<Array<UID>> {
-        let items = await DatabaseManager.getValues(this.stub, this.getParentKey(parent));
+    public async parentRemove(...parent: Array<UID>): Promise<Array<UID>> {
+        let items = await DatabaseManager.getValues(this.stub, this.parentKey.prefix(...parent));
         for (let child of items) {
             await this.linkRemove(child, parent);
         }
@@ -120,7 +115,7 @@ export class EntityRelation extends DestroyableContainer {
         }
         super.destroy();
         this.stub = null;
-        this.childPrefix = null;
-        this.parentPrefix = null;
+        this.childKey = null;
+        this.parentKey = null;
     }
 }
