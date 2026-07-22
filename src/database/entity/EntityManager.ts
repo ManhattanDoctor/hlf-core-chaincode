@@ -36,7 +36,10 @@ export abstract class EntityManager<U extends IUIDable> extends DatabaseManager 
     protected async parseFindResult<T = any>(result: Array<IKeyValue>, options: IEntityFindOptions<T>): Promise<Array<T | string>> {
         let items = result.map(item => item.value);
         items = items.filter(item => !_.isNil(item));
-        return _.isNil(options.transform) ? items : await Promise.all(items.map(item => options.transform(item)));
+        if (_.isNil(options.transform)) {
+            return items;
+        }
+        return (await Promise.all(items.map(item => options.transform(item)))).filter(item => !_.isNil(item));
     }
 
     protected abstract serialize<V = any>(item: U): Promise<V>;

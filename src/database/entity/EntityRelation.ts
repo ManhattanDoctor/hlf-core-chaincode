@@ -36,13 +36,13 @@ export class EntityRelation extends DestroyableContainer {
     // --------------------------------------------------------------------------
 
     protected getChildKey(child: UID, parent?: UID): string {
-        let item = `→link:${this.childPrefix}~${this.parentPrefix}:${getUid(child)}`;
-        return !_.isNil(parent) ? `${item}~${getUid(parent)}` : item;
+        let item = `→link:${this.childPrefix}~${this.parentPrefix}:${getUid(child)}~`;
+        return !_.isNil(parent) ? `${item}${getUid(parent)}` : item;
     }
 
     protected getParentKey(parent: UID, child?: UID): string {
-        let value = `→link:${this.parentPrefix}~${this.childPrefix}:${getUid(parent)}`;
-        return !_.isNil(child) ? `${value}~${getUid(child)}` : value;
+        let value = `→link:${this.parentPrefix}~${this.childPrefix}:${getUid(parent)}~`;
+        return !_.isNil(child) ? `${value}${getUid(child)}` : value;
     }
 
     protected async linkAdd(child: UID, parent: UID): Promise<void> {
