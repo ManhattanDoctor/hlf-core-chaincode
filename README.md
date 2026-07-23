@@ -757,21 +757,17 @@ ISC
 
 ## Автор
 
-**Renat Gubaev**
+**Ренат Губаев**
 - Email: renat.gubaev@gmail.com
 - GitHub: [@ManhattanDoctor](https://github.com/ManhattanDoctor)
 
 ## Ссылки
 
-- [GitHub Repository](https://github.com/ManhattanDoctor/hlf-core-transport-chaincode)
+- [GitHub Repository](https://github.com/ManhattanDoctor/hlf-core-chaincode)
 - [NPM Package](https://www.npmjs.com/package/@hlf-core/chaincode)
-- [Issue Tracker](https://github.com/ManhattanDoctor/hlf-core-transport-chaincode/issues)
+- [Issue Tracker](https://github.com/ManhattanDoctor/hlf-core-chaincode/issues)
 - [Hyperledger Fabric Documentation](https://hyperledger-fabric.readthedocs.io/)
 
 ## Поддержка
 
-Если вы нашли баг или у вас есть предложение по улучшению, пожалуйста, создайте issue в [GitHub Issues](https://github.com/ManhattanDoctor/hlf-core-transport-chaincode/issues).
-
----
-
-**Примечание**: Эта библиотека находится в активной разработке. API может меняться в минорных версиях.
+Если вы нашли баг или у вас есть предложение по улучшению, пожалуйста, создайте issue в [GitHub Issues](https://github.com/ManhattanDoctor/hlf-core-chaincode/issues).

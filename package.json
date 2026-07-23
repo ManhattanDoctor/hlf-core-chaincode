@@ -1,7 +1,7 @@
 {
     "name": "@hlf-core/chaincode",
     "version": "3.6.6",
-    "description": "TypeScript library for developing Hyperledger Fabric chaincode with ORM-like entity management, relations, pagination, and automatic validation",
+    "description": "TypeScript library for developing Hyperledger Fabric chaincode with ORM-like entity management, relations, pagination and automatic validation",
     "main": "./cjs/public-api.js",
     "module": "./esm/public-api.js",
     "types": "./esm/public-api.d.ts",
@@ -28,7 +28,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/ManhattanDoctor/hlf-core-transport-chaincode"
+        "url": "git+https://github.com/ManhattanDoctor/hlf-core-chaincode.git"
     },
     "keywords": [
         "hyperledger",
@@ -38,21 +38,14 @@
         "smart-contracts",
         "blockchain",
         "distributed-ledger",
-        "typescript",
         "entity-management",
         "orm",
-        "database",
-        "key-value",
-        "pagination",
-        "validation",
-        "serialization",
-        "relations",
-        "crud"
+        "typescript"
     ],
     "bugs": {
-        "url": "https://github.com/ManhattanDoctor/hlf-core-transport-chaincode/issues"
+        "url": "https://github.com/ManhattanDoctor/hlf-core-chaincode/issues"
     },
-    "homepage": "https://github.com/ManhattanDoctor/hlf-core-transport-chaincode#readme",
+    "homepage": "https://github.com/ManhattanDoctor/hlf-core-chaincode#readme",
     "engines": {
         "node": ">=14.0.0"
     },
