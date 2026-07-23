@@ -255,28 +255,49 @@ await userManager.removeMany(['user1', 'user2']);
 
 #### Методы поиска
 
-##### `find(details?: Array<keyof T>, options?: IEntityFindOptions): Promise<Array<T>>`
+Оба метода принимают один объект запроса:
+
+```typescript
+interface IEntityQuery<U = any, T = any> {
+    prefix?: string;                              // где искать; по умолчанию префикс менеджера
+    details?: Array<keyof U>;                     // какие связанные данные подгрузить
+    transform?: (item: string) => T | Promise<T>; // как превратить значение записи в сущность
+}
+
+interface IEntityPageQuery<U = any, T = any> extends IEntityQuery<U, T>, IPageBookmark { }
+```
+
+##### `find(query?: IEntityQuery<T>): Promise<Array<T>>`
 
 Находит все сущности с заданным префиксом.
 
 ```typescript
 const allUsers = await userManager.find();
+
+const withDetails = await userManager.find({ details: ['company'] });
+
+const byPrefix = await userManager.find({ prefix: 'user_2026' });
 ```
 
-##### `findPaginated(data: IPaginableBookmark<T>, options?: IEntityFindOptions): Promise<IPaginationBookmark<T>>`
+Метод вычитывает весь диапазон целиком. В chaincode это означает, что размер набора чтения растёт линейно с числом записей — на больших выборках используйте `findPaginated`.
 
-Находит сущности с пагинацией.
+##### `findPaginated(query: IEntityPageQuery<T>): Promise<IPaginationBookmark<T>>`
+
+Находит сущности постранично.
 
 ```typescript
 const result = await userManager.findPaginated({
     pageSize: 20,
-    pageBookmark: 'bookmark123'
+    pageBookmark: 'bookmark123',
+    details: ['company']
 });
 
 console.log(result.items);           // Array<User>
 console.log(result.pageBookmark);    // Следующий bookmark
 console.log(result.isAllLoaded);     // Все ли загружено
 ```
+
+`IPaginableBookmark` из `@ts-core/common` структурно совместим с `IEntityPageQuery`, поэтому DTO списочного запроса можно передавать напрямую. Условия и сортировка из него в chaincode не применяются — используются только `pageSize`, `pageBookmark` и `details`.
 
 #### Абстрактные методы
 
@@ -369,10 +390,10 @@ await relation.childAdd(otcUid, coinUid, ownerUid);
 // ключ: →link:account~otc:<coinUid>~<ownerUid>~<otcUid>
 
 // все ордера по монете
-relation.childListOptions(coinUid);
+relation.childListQuery(coinUid);
 
 // ордера конкретного владельца по этой монете
-relation.childListOptions(coinUid, ownerUid);
+relation.childListQuery(coinUid, ownerUid);
 ```
 
 Части передаются отдельными аргументами, а не склеенной строкой: разделитель внутри значения сдвинул бы границы частей, поэтому такая строка отклоняется с `StateKeySegmentInvalidError`.
@@ -592,10 +613,7 @@ async function addComment(ctx, commentId, postId, text, authorId) {
 
 // Получение всех комментариев поста
 async function getPostComments(ctx, postId, pageSize = 10, bookmark = '') {
-    const result = await commentRelation.childList(postId, {
-        pageSize,
-        pageBookmark: bookmark
-    });
+    const result = await commentRelation.childList({ pageSize, pageBookmark: bookmark }, postId);
 
     return {
         comments: result.items,

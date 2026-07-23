@@ -1,4 +1,4 @@
-import { ILogger, TransformUtil, IPaginableBookmark, IPaginationBookmark, getUid, UID, IUIDable } from '@ts-core/common';
+import { ILogger, TransformUtil, IPageBookmark, IPaginationBookmark, getUid, UID, IUIDable } from '@ts-core/common';
 import { DatabaseManager } from '../DatabaseManager';
 import { IKeyValue, IStub } from '../../stub';
 import * as _ from 'lodash';
@@ -20,26 +20,26 @@ export abstract class EntityManager<U extends IUIDable> extends DatabaseManager 
     //
     // --------------------------------------------------------------------------
 
-    protected getFindOptions(options?: IEntityFindOptions): IEntityFindOptions {
-        if (_.isNil(options)) {
-            options = {};
+    protected getQuery<T extends IEntityQuery<U>>(query?: T): T {
+        if (_.isNil(query)) {
+            query = {} as T;
         }
-        if (_.isNil(options.prefix)) {
-            options.prefix = this.prefix;
+        if (_.isNil(query.prefix)) {
+            query.prefix = this.prefix;
         }
-        if (_.isNil(options.transform)) {
-            options.transform = TransformUtil.toJSON;
+        if (_.isNil(query.transform)) {
+            query.transform = TransformUtil.toJSON;
         }
-        return options;
+        return query;
     }
 
-    protected async parseFindResult<T = any>(result: Array<IKeyValue>, options: IEntityFindOptions<T>): Promise<Array<T | string>> {
+    protected async parseFindResult<T = any>(result: Array<IKeyValue>, query: IEntityQuery<U, T>): Promise<Array<T | string>> {
         let items = result.map(item => item.value);
         items = items.filter(item => !_.isNil(item));
-        if (_.isNil(options.transform)) {
+        if (_.isNil(query.transform)) {
             return items;
         }
-        return (await Promise.all(items.map(item => options.transform(item)))).filter(item => !_.isNil(item));
+        return (await Promise.all(items.map(item => query.transform(item)))).filter(item => !_.isNil(item));
     }
 
     protected abstract serialize<V = any>(item: U): Promise<V>;
@@ -100,25 +100,25 @@ export abstract class EntityManager<U extends IUIDable> extends DatabaseManager 
     //
     // --------------------------------------------------------------------------
 
-    public async find(details?: Array<keyof U>, options?: IEntityFindOptions): Promise<Array<U>> {
-        options = this.getFindOptions(options);
+    public async find(query?: IEntityQuery<U>): Promise<Array<U>> {
+        query = this.getQuery(query);
 
-        let result = await this.getKV(options.prefix, this.getFinish(options.prefix));
-        let items = await this.parseFindResult(result, options);
-        return Promise.all(items.map(item => this.deserialize(item, details)));
+        let result = await this.getKV(query.prefix, this.getFinish(query.prefix));
+        let items = await this.parseFindResult(result, query);
+        return Promise.all(items.map(item => this.deserialize(item, query.details)));
     }
 
-    public async findPaginated(data: IPaginableBookmark<U>, options?: IEntityFindOptions): Promise<IPaginationBookmark<U>> {
-        options = this.getFindOptions(options);
+    public async findPaginated(query: IEntityPageQuery<U>): Promise<IPaginationBookmark<U>> {
+        query = this.getQuery(query);
 
-        let result = await this.getPaginatedKV(data, options.prefix, this.getFinish(options.prefix));
-        let items = await this.parseFindResult(result.items, options);
+        let result = await this.getPaginatedKV(query, query.prefix, this.getFinish(query.prefix));
+        let items = await this.parseFindResult(result.items, query);
 
         return {
             pageSize: result.pageSize,
             isAllLoaded: result.isAllLoaded,
             pageBookmark: result.pageBookmark,
-            items: await Promise.all(items.map(item => this.deserialize(item, data.details)))
+            items: await Promise.all(items.map(item => this.deserialize(item, query.details)))
         };
     }
 
@@ -131,7 +131,10 @@ export abstract class EntityManager<U extends IUIDable> extends DatabaseManager 
     public abstract get prefix(): string;
 }
 
-export interface IEntityFindOptions<T = any> {
+export interface IEntityQuery<U = any, T = any> {
     prefix?: string;
+    details?: Array<keyof U>;
     transform?: (item: string) => T | Promise<T>;
 }
+
+export interface IEntityPageQuery<U = any, T = any> extends IEntityQuery<U, T>, IPageBookmark { }

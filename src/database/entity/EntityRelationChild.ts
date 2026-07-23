@@ -1,5 +1,5 @@
-import { UID, IUIDable, IPaginableBookmark, IPaginationBookmark } from "@ts-core/common";
-import { EntityManager } from "./EntityManager";
+import { UID, IUIDable, IPaginationBookmark } from "@ts-core/common";
+import { EntityManager, IEntityPageQuery } from "./EntityManager";
 import { EntityRelation } from "./EntityRelation";
 import * as _ from 'lodash';
 
@@ -44,8 +44,8 @@ export class EntityRelationChild<U extends IUIDable = any, V extends EntityManag
     //
     // --------------------------------------------------------------------------
 
-    public async childList(data: IPaginableBookmark<U>, ...parent: Array<UID>): Promise<IPaginationBookmark<U>> {
-        return this.manager.findPaginated(data, this.childListOptions(...parent));
+    public async childList(query: IEntityPageQuery<U>, ...parent: Array<UID>): Promise<IPaginationBookmark<U>> {
+        return this.manager.findPaginated(_.assign({}, query, this.childListQuery(...parent)));
     }
 
     // --------------------------------------------------------------------------

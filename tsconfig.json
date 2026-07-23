@@ -6,6 +6,7 @@
         "noUnusedLocals": false,
         "removeComments": true,
         "noLib": false,
+        "strictNullChecks": false,
         "baseUrl": "./",
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,

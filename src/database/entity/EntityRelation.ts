@@ -1,7 +1,7 @@
 import { getUid, UID, DestroyableContainer } from "@ts-core/common";
 import { StateKey } from "@hlf-core/common";
 import { DatabaseManager } from "../DatabaseManager";
-import { IEntityFindOptions } from "./EntityManager";
+import { IEntityQuery } from "./EntityManager";
 import { IStub } from "../../stub";
 import * as _ from 'lodash';
 
@@ -60,7 +60,7 @@ export class EntityRelation extends DestroyableContainer {
         return this.linkAdd(child, parent);
     }
 
-    public childListOptions<T>(...parent: Array<UID>): IEntityFindOptions<T> {
+    public childListQuery<T>(...parent: Array<UID>): IEntityQuery<any, T> {
         return { prefix: this.parentKey.prefix(...parent), transform: item => this.stub.getState(item) };
     }
 
