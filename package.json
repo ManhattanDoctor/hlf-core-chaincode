@@ -24,7 +24,7 @@
         "reflect-metadata": "~0.1.13"
     },
     "devDependencies": {
-        "gulp-npm-module-publisher": "~3.0.5"
+        "gulp-npm-module-publisher": "^3.0.6"
     },
     "repository": {
         "type": "git",
@@ -45,7 +45,7 @@
     "bugs": {
         "url": "https://github.com/ManhattanDoctor/hlf-core-chaincode/issues"
     },
-    "homepage": "https://github.com/ManhattanDoctor/hlf-core-chaincode#readme",
+    "homepage": "https://hlf.gnosisai.ru/docs/packages/chaincode",
     "engines": {
         "node": ">=14.0.0"
     },

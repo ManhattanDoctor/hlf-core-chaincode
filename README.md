@@ -1,43 +1,48 @@
+**English** · [Русский](./README.ru.md)
+
 # @hlf-core/chaincode
 
-> TypeScript библиотека для разработки chaincode в Hyperledger Fabric
+> TypeScript library for developing chaincode in Hyperledger Fabric
 
 [![npm version](https://img.shields.io/npm/v/@hlf-core/chaincode.svg)](https://www.npmjs.com/package/@hlf-core/chaincode)
+[![Docs](https://img.shields.io/badge/docs-hlf.gnosisai.ru-1f6feb)](https://hlf.gnosisai.ru/docs/packages/chaincode)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
 
-## Описание
+Full documentation: https://hlf.gnosisai.ru/docs/packages/chaincode
 
-`@hlf-core/chaincode` — это высокоуровневая TypeScript библиотека для разработки chaincode (смарт-контрактов) в Hyperledger Fabric. Она предоставляет абстракции и инструменты для управления данными, сущностями и их отношениями в блокчейн-реестре.
+## Overview
 
-### Основные возможности
+`@hlf-core/chaincode` is a high-level TypeScript library for developing chaincode (smart contracts) in Hyperledger Fabric. It provides abstractions and tools for managing data, entities, and their relationships in the blockchain ledger.
 
-- **🗄️ Управление базой данных** — работа с key-value хранилищем Hyperledger Fabric
-- **📦 Управление сущностями** — ORM-подобный API для работы с бизнес-объектами
-- **🔗 Отношения между сущностями** — управление связями parent-child между объектами
-- **📄 Пагинация** — эффективная работа с большими наборами данных
-- **✅ Валидация и трансформация** — автоматическая сериализация/десериализация с валидацией
-- **📘 TypeScript** — полная типизация и поддержка современных возможностей языка
-- **📦 Dual Package** — поддержка как CommonJS, так и ES Modules
+### Key Features
 
-## Установка
+- ** Database management** — working with the Hyperledger Fabric key-value store
+- ** Entity management** — an ORM-like API for working with business objects
+- ** Entity relationships** — managing parent-child links between objects
+- ** Pagination** — efficient handling of large data sets
+- ** Validation and transformation** — automatic serialization/deserialization with validation
+- ** TypeScript** — full typing and support for modern language features
+- ** Dual Package** — support for both CommonJS and ES Modules
+
+## Installation
 
 ```bash
 npm install @hlf-core/chaincode
 ```
 
-### Зависимости
+### Dependencies
 
-Библиотека требует следующие пакеты:
+The library requires the following packages:
 
 ```bash
 npm install @hlf-core/common @ts-core/common fabric-shim reflect-metadata
 ```
 
-`@hlf-core/common` предоставляет `StateKey` — сборку ключей состояния, на которой построены связи между сущностями.
+`@hlf-core/common` provides `StateKey` — the assembly of state keys on which entity relationships are built.
 
-## Быстрый старт
+## Quick Start
 
-### 1. Определение сущности
+### 1. Defining an entity
 
 ```typescript
 import { IUIDable } from '@ts-core/common';
@@ -58,7 +63,7 @@ export class User implements IUIDable {
 }
 ```
 
-### 2. Создание менеджера сущностей
+### 2. Creating an entity manager
 
 ```typescript
 import { EntityManagerImpl } from '@hlf-core/chaincode';
@@ -70,32 +75,32 @@ export class UserManager extends EntityManagerImpl<User> {
         super(logger, stub);
     }
 
-    // Обязательный метод: преобразование из plain object в класс
+    // Required method: convert a plain object into a class
     public toEntity(item: any): User {
         return TransformUtil.toClass(User, item);
     }
 
-    // Префикс для хранения в блокчейне
+    // Prefix for storage in the blockchain
     public get prefix(): string {
         return 'user:';
     }
 
-    // Опционально: загрузка связанных данных
+    // Optional: load related data
     public async loadDetails(item: User, details?: Array<keyof User>): Promise<void> {
-        // Загрузка дополнительных данных, если нужно
+        // Load additional data if needed
     }
 }
 ```
 
-### 3. Использование в chaincode
+### 3. Using it in chaincode
 
 ```typescript
 import { Context } from 'fabric-contract-api';
 
 export class MyContract {
     async createUser(ctx: Context, userId: string, name: string, age: number, email: string): Promise<void> {
-        const logger = // ваш logger
-        const stub = // адаптер для ctx.stub
+        const logger = // your logger
+        const stub = // adapter for ctx.stub
 
         const userManager = new UserManager(logger, stub);
 
@@ -105,27 +110,27 @@ export class MyContract {
         user.age = age;
         user.email = email;
 
-        // Сохранение с автоматической валидацией и сериализацией
+        // Save with automatic validation and serialization
         await userManager.save(user);
     }
 
     async getUser(ctx: Context, userId: string): Promise<User> {
-        const logger = // ваш logger
-        const stub = // адаптер для ctx.stub
+        const logger = // your logger
+        const stub = // adapter for ctx.stub
 
         const userManager = new UserManager(logger, stub);
 
-        // Получение с автоматической десериализацией и валидацией
+        // Retrieve with automatic deserialization and validation
         return await userManager.get(userId);
     }
 
     async getAllUsers(ctx: Context, pageSize: number, bookmark?: string): Promise<any> {
-        const logger = // ваш logger
-        const stub = // адаптер для ctx.stub
+        const logger = // your logger
+        const stub = // adapter for ctx.stub
 
         const userManager = new UserManager(logger, stub);
 
-        // Получение с пагинацией
+        // Retrieve with pagination
         const result = await userManager.findPaginated({
             pageSize,
             pageBookmark: bookmark
@@ -140,25 +145,25 @@ export class MyContract {
 }
 ```
 
-## API Документация
+## API Documentation
 
 ### DatabaseManager
 
-Базовый класс для работы с key-value хранилищем.
+Base class for working with the key-value store.
 
-#### Методы
+#### Methods
 
 ##### `getKV(start: string, finish?: string): Promise<Array<IKeyValue>>`
 
-Получает все пары ключ-значение в диапазоне.
+Retrieves all key-value pairs within a range.
 
 ```typescript
-const kv = await databaseManager.getKV('user:', 'user:\ufff0');
+const kv = await databaseManager.getKV('user:', 'user:￰');
 ```
 
 ##### `getKeys(start: string, finish?: string): Promise<Array<string>>`
 
-Получает только ключи в диапазоне.
+Retrieves only the keys within a range.
 
 ```typescript
 const keys = await databaseManager.getKeys('user:');
@@ -166,7 +171,7 @@ const keys = await databaseManager.getKeys('user:');
 
 ##### `getValues(start: string, finish?: string): Promise<Array<string>>`
 
-Получает только значения в диапазоне.
+Retrieves only the values within a range.
 
 ```typescript
 const values = await databaseManager.getValues('user:');
@@ -174,7 +179,7 @@ const values = await databaseManager.getValues('user:');
 
 ##### `getPaginatedKV(request: IPageBookmark, start: string, finish?: string): Promise<IPaginationBookmark<IKeyValue>>`
 
-Получает пары ключ-значение с пагинацией.
+Retrieves key-value pairs with pagination.
 
 ```typescript
 const result = await databaseManager.getPaginatedKV(
@@ -185,13 +190,13 @@ const result = await databaseManager.getPaginatedKV(
 
 ### EntityManager<T>
 
-Абстрактный класс для управления сущностями. Наследуется от `DatabaseManager`.
+Abstract class for managing entities. Inherits from `DatabaseManager`.
 
-#### Методы CRUD
+#### CRUD Methods
 
 ##### `get(item: UID, details?: Array<keyof T>): Promise<T>`
 
-Получает сущность по ID.
+Retrieves an entity by ID.
 
 ```typescript
 const user = await userManager.get('user123');
@@ -199,7 +204,7 @@ const user = await userManager.get('user123');
 
 ##### `getMany(items: Array<UID>, details?: Array<keyof T>): Promise<Array<T>>`
 
-Получает несколько сущностей по ID.
+Retrieves multiple entities by ID.
 
 ```typescript
 const users = await userManager.getMany(['user1', 'user2', 'user3']);
@@ -207,7 +212,7 @@ const users = await userManager.getMany(['user1', 'user2', 'user3']);
 
 ##### `save(item: T): Promise<T>`
 
-Сохраняет сущность (создание или обновление).
+Saves an entity (create or update).
 
 ```typescript
 await userManager.save(user);
@@ -215,7 +220,7 @@ await userManager.save(user);
 
 ##### `saveMany(items: Array<T>): Promise<Array<T>>`
 
-Сохраняет несколько сущностей.
+Saves multiple entities.
 
 ```typescript
 await userManager.saveMany([user1, user2, user3]);
@@ -223,7 +228,7 @@ await userManager.saveMany([user1, user2, user3]);
 
 ##### `saveIfNotExists(item: T): Promise<T>`
 
-Сохраняет сущность только если она еще не существует.
+Saves an entity only if it does not already exist.
 
 ```typescript
 await userManager.saveIfNotExists(user);
@@ -231,7 +236,7 @@ await userManager.saveIfNotExists(user);
 
 ##### `has(item: UID): Promise<boolean>`
 
-Проверяет существование сущности.
+Checks whether an entity exists.
 
 ```typescript
 const exists = await userManager.has('user123');
@@ -239,7 +244,7 @@ const exists = await userManager.has('user123');
 
 ##### `remove(item: UID): Promise<void>`
 
-Удаляет сущность.
+Removes an entity.
 
 ```typescript
 await userManager.remove('user123');
@@ -247,21 +252,21 @@ await userManager.remove('user123');
 
 ##### `removeMany(items: Array<UID>): Promise<void>`
 
-Удаляет несколько сущностей.
+Removes multiple entities.
 
 ```typescript
 await userManager.removeMany(['user1', 'user2']);
 ```
 
-#### Методы поиска
+#### Query Methods
 
-Оба метода принимают один объект запроса:
+Both methods accept a single query object:
 
 ```typescript
 interface IEntityQuery<U = any, T = any> {
-    prefix?: string;                              // где искать; по умолчанию префикс менеджера
-    details?: Array<keyof U>;                     // какие связанные данные подгрузить
-    transform?: (item: string) => T | Promise<T>; // как превратить значение записи в сущность
+    prefix?: string;                              // where to search; defaults to the manager's prefix
+    details?: Array<keyof U>;                     // which related data to load
+    transform?: (item: string) => T | Promise<T>; // how to turn a record's value into an entity
 }
 
 interface IEntityPageQuery<U = any, T = any> extends IEntityQuery<U, T>, IPageBookmark { }
@@ -269,7 +274,7 @@ interface IEntityPageQuery<U = any, T = any> extends IEntityQuery<U, T>, IPageBo
 
 ##### `find(query?: IEntityQuery<T>): Promise<Array<T>>`
 
-Находит все сущности с заданным префиксом.
+Finds all entities with the given prefix.
 
 ```typescript
 const allUsers = await userManager.find();
@@ -279,11 +284,11 @@ const withDetails = await userManager.find({ details: ['company'] });
 const byPrefix = await userManager.find({ prefix: 'user_2026' });
 ```
 
-Метод вычитывает весь диапазон целиком. В chaincode это означает, что размер набора чтения растёт линейно с числом записей — на больших выборках используйте `findPaginated`.
+This method reads the entire range at once. In chaincode this means the read set grows linearly with the number of records — for large result sets use `findPaginated`.
 
 ##### `findPaginated(query: IEntityPageQuery<T>): Promise<IPaginationBookmark<T>>`
 
-Находит сущности постранично.
+Finds entities page by page.
 
 ```typescript
 const result = await userManager.findPaginated({
@@ -293,145 +298,145 @@ const result = await userManager.findPaginated({
 });
 
 console.log(result.items);           // Array<User>
-console.log(result.pageBookmark);    // Следующий bookmark
-console.log(result.isAllLoaded);     // Все ли загружено
+console.log(result.pageBookmark);    // Next bookmark
+console.log(result.isAllLoaded);     // Whether everything is loaded
 ```
 
-`IPaginableBookmark` из `@ts-core/common` структурно совместим с `IEntityPageQuery`, поэтому DTO списочного запроса можно передавать напрямую. Условия и сортировка из него в chaincode не применяются — используются только `pageSize`, `pageBookmark` и `details`.
+`IPaginableBookmark` from `@ts-core/common` is structurally compatible with `IEntityPageQuery`, so a list query DTO can be passed directly. Its conditions and sorting are not applied in chaincode — only `pageSize`, `pageBookmark`, and `details` are used.
 
-#### Абстрактные методы
+#### Abstract Methods
 
-При наследовании от `EntityManager` необходимо реализовать:
+When inheriting from `EntityManager` you must implement:
 
 ```typescript
-// Префикс для ключей в блокчейне
+// Prefix for keys in the blockchain
 abstract get prefix(): string;
 
-// Сериализация сущности для хранения
+// Serialize an entity for storage
 protected abstract serialize<V = any>(item: T): Promise<V>;
 
-// Десериализация сущности из хранилища
+// Deserialize an entity from storage
 protected abstract deserialize(item: any, details?: Array<keyof T>): Promise<T>;
 
-// Загрузка дополнительных данных
+// Load additional data
 public abstract loadDetails(item: T, details?: Array<keyof T>): Promise<void>;
 ```
 
 ### EntityManagerImpl<T>
 
-Реализация `EntityManager` с автоматической сериализацией и валидацией через `class-validator` и `class-transformer`.
+An implementation of `EntityManager` with automatic serialization and validation via `class-validator` and `class-transformer`.
 
-При наследовании нужно реализовать только:
+When inheriting you only need to implement:
 
 ```typescript
-// Преобразование plain object в класс
+// Convert a plain object into a class
 public abstract toEntity(item: any): T;
 
-// Префикс для ключей
+// Prefix for keys
 public abstract get prefix(): string;
 
-// Опционально: загрузка связанных данных
+// Optional: load related data
 public async loadDetails(item: T, details?: Array<keyof T>): Promise<void> {
-    // Реализация опциональна
+    // Implementation is optional
 }
 ```
 
 ### EntityRelation
 
-Управление отношениями между сущностями.
+Managing relationships between entities.
 
 ```typescript
 import { EntityRelation } from '@hlf-core/chaincode';
 
-// Создание связи между постом и комментариями
+// Create a relation between a post and comments
 const relation = new EntityRelation(
     stub,
-    'post',      // родительский префикс
-    'comment'    // дочерний префикс
+    'post',      // parent prefix
+    'comment'    // child prefix
 );
 
-// Добавление связи
+// Add a link
 await relation.childLinkAdd('comment123', 'post456');
 
-// Проверка связи
+// Check a link
 const hasLink = await relation.childLinkHas('comment123', 'post456');
 
-// Удаление связи
+// Remove a link
 await relation.childLinkRemove('comment123', 'post456');
 
-// Удаление всех связей для дочернего элемента
+// Remove all links for a child element
 await relation.childRemove('comment123');
 
-// Удаление родителя и получение всех дочерних ID
+// Remove a parent and get all child IDs
 const childIds = await relation.parentRemove('post456');
 ```
 
-#### Как хранятся связи
+#### How links are stored
 
-На каждую связь пишутся два ключа — прямой и обратный:
+Two keys are written for each link — forward and reverse:
 
 ```
 →link:post~comment:post456~comment123    → comment123
 →link:comment~post:comment123~post456    → post456
 ```
 
-Прямой ключ обслуживает выборку детей по родителю: диапазонный запрос по префиксу `→link:post~comment:post456~` возвращает всех детей. Обратный нужен, чтобы снять связи, зная только ребёнка — `childRemove` не требует знать родителя.
+The forward key serves the retrieval of children by parent: a range query on the prefix `→link:post~comment:post456~` returns all children. The reverse key is needed to remove links knowing only the child — `childRemove` does not require knowing the parent.
 
-Ключи собирает `StateKey` из `@hlf-core/common`, поэтому части ключа проверяются, а префикс поиска всегда заканчивается разделителем — родитель `post4` не захватит детей родителя `post45`.
+Keys are assembled by `StateKey` from `@hlf-core/common`, so key parts are validated and the search prefix always ends with a separator — the parent `post4` will not capture the children of the parent `post45`.
 
-#### Составной родитель
+#### Composite parent
 
-Родитель может состоять из нескольких частей — тогда поиск возможен по любой левой части. Это удобно, когда связь адресуется парой значений:
+A parent can consist of several parts — in that case the search is possible by any left-hand part. This is convenient when a relation is addressed by a pair of values:
 
 ```typescript
-// связь ордера со счётом: монета + владелец
+// linking an order to an account: coin + owner
 await relation.childAdd(otcUid, coinUid, ownerUid);
 
-// ключ: →link:account~otc:<coinUid>~<ownerUid>~<otcUid>
+// key: →link:account~otc:<coinUid>~<ownerUid>~<otcUid>
 
-// все ордера по монете
+// all orders by coin
 relation.childListQuery(coinUid);
 
-// ордера конкретного владельца по этой монете
+// a specific owner's orders for this coin
 relation.childListQuery(coinUid, ownerUid);
 ```
 
-Части передаются отдельными аргументами, а не склеенной строкой: разделитель внутри значения сдвинул бы границы частей, поэтому такая строка отклоняется с `StateKeySegmentInvalidError`.
+The parts are passed as separate arguments rather than as a concatenated string: a separator inside a value would shift the part boundaries, so such a string is rejected with `StateKeySegmentInvalidError`.
 
 ```typescript
-await relation.childAdd(otcUid, `${coinUid}~${ownerUid}`);   // ошибка
-await relation.childAdd(otcUid, coinUid, ownerUid);          // верно
+await relation.childAdd(otcUid, `${coinUid}~${ownerUid}`);   // error
+await relation.childAdd(otcUid, coinUid, ownerUid);          // correct
 ```
 
 ### EntityRelationChild<T, M>
 
-Расширение `EntityRelation` с автоматическим управлением дочерними сущностями.
+An extension of `EntityRelation` with automatic management of child entities.
 
 ```typescript
 import { EntityRelationChild } from '@hlf-core/chaincode';
 
 const commentRelation = new EntityRelationChild(
-    'post',              // родительский префикс
-    'comment',           // дочерний префикс
-    commentManager       // менеджер для Comment
+    'post',              // parent prefix
+    'comment',           // child prefix
+    commentManager       // manager for Comment
 );
 
-// Получение всех комментариев поста с пагинацией
+// Get all comments of a post with pagination
 const comments = await commentRelation.childList({ pageSize: 10 }, 'post456');
 
-// Удаление поста и всех его комментариев
+// Remove a post and all its comments
 const deletedCommentIds = await commentRelation.parentRemove('post456');
 ```
 
-## Архитектура
+## Architecture
 
 ```
 ┌─────────────────────────────────────────┐
 │           IStub Interface               │
-│  (Абстракция над fabric-shim)           │
+│  (Abstraction over fabric-shim)         │
 └───────────────┬─────────────────────────┘
                 │
-                │ использует
+                │ uses
                 ▼
 ┌─────────────────────────────────────────┐
 │        DatabaseManager                  │
@@ -440,7 +445,7 @@ const deletedCommentIds = await commentRelation.parentRemove('post456');
 │  • getPaginatedKV                       │
 └───────────────┬─────────────────────────┘
                 │
-                │ наследует
+                │ inherits
                 ▼
 ┌─────────────────────────────────────────┐
 │        EntityManager<T>                 │
@@ -449,51 +454,51 @@ const deletedCommentIds = await commentRelation.parentRemove('post456');
 │  • serialize / deserialize (abstract)   │
 └───────────────┬─────────────────────────┘
                 │
-                │ наследует
+                │ inherits
                 ▼
 ┌─────────────────────────────────────────┐
 │      EntityManagerImpl<T>               │
-│  • Автоматическая сериализация          │
-│  • Автоматическая валидация             │
+│  • Automatic serialization              │
+│  • Automatic validation                 │
 │  • toEntity(item) (abstract)            │
 └─────────────────────────────────────────┘
                 │
-                │ используется в
+                │ used in
                 ▼
         ┌───────────────┐
-        │ Ваш Chaincode │
+        │ Your Chaincode│
         └───────────────┘
 ```
 
-### Отношения между сущностями
+### Entity relationships
 
 ```
 ┌──────────────────────┐
 │   EntityRelation     │
-│  • Управление связями│
+│  • Manage relations  │
 │  • childAdd/Remove   │
 │  • parentRemove      │
 └──────────┬───────────┘
            │
-           │ наследует
+           │ inherits
            ▼
 ┌──────────────────────────────┐
 │  EntityRelationChild<T, M>   │
-│  • childList (с пагинацией)  │
-│  • Каскадное удаление        │
+│  • childList (paginated)     │
+│  • Cascade deletion          │
 └──────────────────────────────┘
 ```
 
-## Примеры использования
+## Usage Examples
 
-### Пример 1: Простое CRUD приложение
+### Example 1: A simple CRUD application
 
 ```typescript
 import { EntityManagerImpl } from '@hlf-core/chaincode';
 import { IsString, IsNumber } from 'class-validator';
 import { IUIDable, TransformUtil } from '@ts-core/common';
 
-// Модель
+// Model
 class Product implements IUIDable {
     @IsString()
     uid: string;
@@ -508,7 +513,7 @@ class Product implements IUIDable {
     quantity: number;
 }
 
-// Менеджер
+// Manager
 class ProductManager extends EntityManagerImpl<Product> {
     public toEntity(item: any): Product {
         return TransformUtil.toClass(Product, item);
@@ -519,7 +524,7 @@ class ProductManager extends EntityManagerImpl<Product> {
     }
 }
 
-// Использование в chaincode
+// Using it in chaincode
 async function createProduct(ctx, id, name, price, quantity) {
     const manager = new ProductManager(logger, stub);
 
@@ -547,10 +552,10 @@ async function deleteProduct(ctx, id) {
 }
 ```
 
-### Пример 2: Отношения между сущностями
+### Example 2: Entity relationships
 
 ```typescript
-// Модели
+// Models
 class Post implements IUIDable {
     @IsString()
     uid: string;
@@ -576,7 +581,7 @@ class Comment implements IUIDable {
     authorId: string;
 }
 
-// Менеджеры
+// Managers
 class PostManager extends EntityManagerImpl<Post> {
     public toEntity(item: any): Post {
         return TransformUtil.toClass(Post, item);
@@ -591,7 +596,7 @@ class CommentManager extends EntityManagerImpl<Comment> {
     public get prefix(): string { return 'comment:'; }
 }
 
-// Создание связи
+// Creating a relation
 const commentManager = new CommentManager(logger, stub);
 const commentRelation = new EntityRelationChild(
     'post',
@@ -599,7 +604,7 @@ const commentRelation = new EntityRelationChild(
     commentManager
 );
 
-// Добавление комментария к посту
+// Adding a comment to a post
 async function addComment(ctx, commentId, postId, text, authorId) {
     const comment = new Comment();
     comment.uid = commentId;
@@ -611,7 +616,7 @@ async function addComment(ctx, commentId, postId, text, authorId) {
     await commentRelation.childLinkAdd(commentId, postId);
 }
 
-// Получение всех комментариев поста
+// Getting all comments of a post
 async function getPostComments(ctx, postId, pageSize = 10, bookmark = '') {
     const result = await commentRelation.childList({ pageSize, pageBookmark: bookmark }, postId);
 
@@ -622,22 +627,22 @@ async function getPostComments(ctx, postId, pageSize = 10, bookmark = '') {
     };
 }
 
-// Удаление поста со всеми комментариями
+// Removing a post along with all its comments
 async function deletePost(ctx, postId) {
     const postManager = new PostManager(logger, stub);
 
-    // Удаляет пост и все связанные комментарии
+    // Removes the post and all related comments
     await commentRelation.parentRemove(postId);
     await postManager.remove(postId);
 }
 ```
 
-### Пример 3: Кастомная сериализация
+### Example 3: Custom serialization
 
 ```typescript
 class CustomEntityManager extends EntityManager<MyEntity> {
     protected async serialize(item: MyEntity): Promise<any> {
-        // Кастомная логика сериализации
+        // Custom serialization logic
         return {
             id: item.uid,
             data: encrypt(JSON.stringify(item)),
@@ -648,7 +653,7 @@ class CustomEntityManager extends EntityManager<MyEntity> {
     protected async deserialize(item: any, details?: Array<keyof MyEntity>): Promise<MyEntity> {
         if (!item) return null;
 
-        // Кастомная логика десериализации
+        // Custom deserialization logic
         const decrypted = decrypt(item.data);
         const entity = JSON.parse(decrypted);
 
@@ -657,7 +662,7 @@ class CustomEntityManager extends EntityManager<MyEntity> {
     }
 
     public async loadDetails(item: MyEntity, details?: Array<keyof MyEntity>): Promise<void> {
-        // Загрузка связанных данных
+        // Load related data
         if (details?.includes('author')) {
             item.author = await this.loadAuthor(item.authorId);
         }
@@ -669,11 +674,11 @@ class CustomEntityManager extends EntityManager<MyEntity> {
 }
 ```
 
-## Интерфейсы
+## Interfaces
 
 ### IStub
 
-Интерфейс для работы с Hyperledger Fabric stub. Необходимо создать адаптер, реализующий этот интерфейс.
+Interface for working with the Hyperledger Fabric stub. You need to create an adapter that implements this interface.
 
 ```typescript
 interface IStub {
@@ -706,44 +711,44 @@ interface IKeyValue {
 }
 ```
 
-## Разработка
+## Development
 
-### Требования
+### Requirements
 
 - Node.js >= 14
 - TypeScript >= 4.0
 - Hyperledger Fabric >= 2.0
 
-### Сборка проекта
+### Building the Project
 
 ```bash
-# Установка зависимостей
+# Install dependencies
 npm install
 
-# Сборка (создает dist/cjs и dist/esm)
+# Build (creates dist/cjs and dist/esm)
 make build
 
-# Очистка
+# Clean
 make clean
 ```
 
-### Структура проекта
+### Project Structure
 
 ```
 hlf-core-chaincode/
 ├── src/
 │   ├── database/
 │   │   ├── entity/
-│   │   │   ├── EntityManager.ts           # Абстрактный менеджер сущностей
-│   │   │   ├── EntityManagerImpl.ts       # Реализация с валидацией
-│   │   │   ├── EntityRelation.ts          # Управление связями
-│   │   │   └── EntityRelationChild.ts     # Связи с каскадным удалением
-│   │   └── DatabaseManager.ts             # Базовый менеджер БД
+│   │   │   ├── EntityManager.ts           # Abstract entity manager
+│   │   │   ├── EntityManagerImpl.ts       # Implementation with validation
+│   │   │   ├── EntityRelation.ts          # Relationship management
+│   │   │   └── EntityRelationChild.ts     # Relations with cascade deletion
+│   │   └── DatabaseManager.ts             # Base database manager
 │   ├── stub/
-│   │   ├── IStub.ts                       # Интерфейс stub
-│   │   └── IStubHolder.ts                 # Holder для stub
-│   └── public-api.ts                      # Публичный API
-├── dist/                                  # Скомпилированный код
+│   │   ├── IStub.ts                       # Stub interface
+│   │   └── IStubHolder.ts                 # Holder for stub
+│   └── public-api.ts                      # Public API
+├── dist/                                  # Compiled code
 │   ├── cjs/                               # CommonJS
 │   └── esm/                               # ES Modules
 ├── package.json
@@ -751,23 +756,23 @@ hlf-core-chaincode/
 └── README.md
 ```
 
-## Лицензия
+## License
 
 ISC
 
-## Автор
+## Author
 
-**Ренат Губаев**
+**Renat Gubaev**
 - Email: renat.gubaev@gmail.com
 - GitHub: [@ManhattanDoctor](https://github.com/ManhattanDoctor)
 
-## Ссылки
+## Links
 
 - [GitHub Repository](https://github.com/ManhattanDoctor/hlf-core-chaincode)
 - [NPM Package](https://www.npmjs.com/package/@hlf-core/chaincode)
 - [Issue Tracker](https://github.com/ManhattanDoctor/hlf-core-chaincode/issues)
 - [Hyperledger Fabric Documentation](https://hyperledger-fabric.readthedocs.io/)
 
-## Поддержка
+## Support
 
-Если вы нашли баг или у вас есть предложение по улучшению, пожалуйста, создайте issue в [GitHub Issues](https://github.com/ManhattanDoctor/hlf-core-chaincode/issues).
+If you found a bug or have a suggestion for improvement, please open an issue in [GitHub Issues](https://github.com/ManhattanDoctor/hlf-core-chaincode/issues).
